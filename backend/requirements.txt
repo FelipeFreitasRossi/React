@@ -10,3 +10,4 @@ yfinance
 pandas
 websockets
 python-dotenv
+gunicorn==23.0.0
