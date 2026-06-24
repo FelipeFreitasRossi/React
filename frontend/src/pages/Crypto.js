@@ -11,12 +11,13 @@ const Crypto = () => {
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
 
-  // 🔹 Envolva fetchPrices em useCallback para estabilizar a referência
+  // 🔹 useCallback para estabilizar a função
   const fetchPrices = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:5000/api/crypto-prices');
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_URL}/api/crypto-prices`);
       if (!res.ok) throw new Error(t('crypto.error'));
       const data = await res.json();
       setPrices(data);
@@ -30,14 +31,14 @@ const Crypto = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]); // depende de t (tradução)
+  }, [t]);
 
-  // 🔹 Adicione fetchPrices à lista de dependências
+  // 🔹 useEffect com a dependência correta
   useEffect(() => {
     fetchPrices();
   }, [fetchPrices]);
 
-  // WebSocket (sem alterações)
+  // WebSocket
   useEffect(() => {
     socketRef.current = new WebSocket('ws://localhost:8765');
     socketRef.current.onopen = () => console.log('✅ WebSocket conectado');
