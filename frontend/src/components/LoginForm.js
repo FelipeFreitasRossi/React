@@ -1,86 +1,143 @@
+// src/components/LoginForm.js
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { FiMail, FiLock, FiUser, FiAlertCircle } from 'react-icons/fi';
 
 const LoginForm = ({ onLogin, onSignUp }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
 
+  // ========== VALIDAÇÕES ==========
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.email) newErrors.email = 'E-mail é obrigatório';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'E-mail inválido';
+    
+    if (isSignUp) {
+      if (!formData.username) newErrors.username = 'Usuário é obrigatório';
+      else if (formData.username.length < 3) newErrors.username = 'Usuário deve ter pelo menos 3 caracteres';
+      
+      if (!formData.password) newErrors.password = 'Senha é obrigatória';
+      else if (formData.password.length < 6) newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+      
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'As senhas não coincidem';
+      }
+    } else {
+      if (!formData.password) newErrors.password = 'Senha é obrigatória';
+    }
+    return newErrors;
+  };
+
+  // ========== ENVIO DO FORMULÁRIO ==========
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username.trim() === '' || password.trim() === '') {
-      setError('Preencha todos os campos');
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     setLoading(true);
-    setError('');
+    setGeneralError('');
 
     try {
       const endpoint = isSignUp ? '/api/register' : '/api/login';
+      const payload = isSignUp 
+        ? { username: formData.username, email: formData.email, password: formData.password }
+        : { email: formData.email, password: formData.password };
+
       const res = await fetch(`http://localhost:5000${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
+      
       if (res.ok) {
-        // Sucesso – armazena token e chama callback
-        localStorage.setItem('token', data.token);
         if (isSignUp) {
-          onSignUp(username, password);
+          // ✅ CADASTRO BEM-SUCEDIDO: volta para o login com mensagem
+          setGeneralError('✅ Cadastro realizado! Faça login para continuar.');
+          setIsSignUp(false);
+          setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+          setErrors({});
+          // NÃO autentica o usuário – apenas mostra a mensagem
         } else {
-          onLogin(username, password);
+          // Login bem-sucedido
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          onLogin(data.user.username, data.user.email);
         }
       } else {
-        setError(data.error || 'Erro na requisição');
+        setGeneralError(data.error || 'Erro na requisição');
       }
     } catch (err) {
-      setError('Erro de conexão com o servidor');
+      setGeneralError('Erro de conexão com o servidor');
     } finally {
       setLoading(false);
     }
   };
 
+  // ========== ALTERNAR ENTRE LOGIN E CADASTRO ==========
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
-    setError('');
+    setErrors({});
+    setGeneralError('');
+    setFormData({ username: '', email: '', password: '', confirmPassword: '' });
   };
 
+  // ========== ATUALIZAR CAMPOS ==========
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: '' });
+  };
+
+  // ========== RENDER ==========
   return (
     <StyledWrapper>
       <div className="container">
         <div className={`forms-container ${isSignUp ? 'slide' : ''}`}>
-          {/* Login */}
+          {/* ===== FORMULÁRIO DE LOGIN ===== */}
           <div className="form login-form">
             <h2>Login</h2>
             <form onSubmit={handleSubmit}>
               <div className="field">
-                <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" width={16} height={16} fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z" />
-                </svg>
+                <FiMail className="input-icon" />
                 <input
-                  type="text"
-                  placeholder="Usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  value={formData.email}
+                  onChange={handleChange}
                   required
                 />
               </div>
+              {errors.email && <ErrorMessage><FiAlertCircle /> {errors.email}</ErrorMessage>}
+
               <div className="field">
-                <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" width={16} height={16} fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-                </svg>
+                <FiLock className="input-icon" />
                 <input
                   type="password"
+                  name="password"
                   placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleChange}
                   required
                 />
               </div>
-              {error && <div className="error-message">{error}</div>}
+              {errors.password && <ErrorMessage><FiAlertCircle /> {errors.password}</ErrorMessage>}
+
+              {generalError && <ErrorMessage><FiAlertCircle /> {generalError}</ErrorMessage>}
+
               <button type="submit" className="button1" disabled={loading}>
                 {loading ? 'Carregando...' : 'Login'}
               </button>
@@ -93,35 +150,64 @@ const LoginForm = ({ onLogin, onSignUp }) => {
             </form>
           </div>
 
-          {/* Cadastro */}
+          {/* ===== FORMULÁRIO DE CADASTRO ===== */}
           <div className="form signup-form">
             <h2>Cadastro</h2>
             <form onSubmit={handleSubmit}>
               <div className="field">
-                <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" width={16} height={16} fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z" />
-                </svg>
+                <FiUser className="input-icon" />
                 <input
                   type="text"
+                  name="username"
                   placeholder="Usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={formData.username}
+                  onChange={handleChange}
                   required
                 />
               </div>
+              {errors.username && <ErrorMessage><FiAlertCircle /> {errors.username}</ErrorMessage>}
+
               <div className="field">
-                <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" width={16} height={16} fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-                </svg>
+                <FiMail className="input-icon" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              {errors.email && <ErrorMessage><FiAlertCircle /> {errors.email}</ErrorMessage>}
+
+              <div className="field">
+                <FiLock className="input-icon" />
                 <input
                   type="password"
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  name="password"
+                  placeholder="Senha (mínimo 6 caracteres)"
+                  value={formData.password}
+                  onChange={handleChange}
                   required
                 />
               </div>
-              {error && <div className="error-message">{error}</div>}
+              {errors.password && <ErrorMessage><FiAlertCircle /> {errors.password}</ErrorMessage>}
+
+              <div className="field">
+                <FiLock className="input-icon" />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirmar senha"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              {errors.confirmPassword && <ErrorMessage><FiAlertCircle /> {errors.confirmPassword}</ErrorMessage>}
+
+              {generalError && <ErrorMessage><FiAlertCircle /> {generalError}</ErrorMessage>}
+
               <button type="submit" className="button1" disabled={loading}>
                 {loading ? 'Carregando...' : 'Cadastrar'}
               </button>
@@ -136,6 +222,17 @@ const LoginForm = ({ onLogin, onSignUp }) => {
   );
 };
 
+// ========== STYLED COMPONENTS ==========
+const ErrorMessage = styled.div`
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+`;
+
 const StyledWrapper = styled.div`
   display: flex;
   justify-content: center;
@@ -147,7 +244,7 @@ const StyledWrapper = styled.div`
   .container {
     background: #171717;
     border-radius: 25px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     width: 100%;
     max-width: 420px;
     overflow: hidden;
@@ -187,7 +284,7 @@ const StyledWrapper = styled.div`
     border-radius: 25px;
     padding: 0.6em 1em;
     background-color: #252525;
-    box-shadow: inset 2px 5px 10px rgba(0,0,0,0.5);
+    box-shadow: inset 2px 5px 10px rgba(0, 0, 0, 0.5);
     margin-bottom: 1rem;
   }
 
@@ -196,6 +293,7 @@ const StyledWrapper = styled.div`
     width: 1.3em;
     fill: #aaa;
     flex-shrink: 0;
+    color: #aaa;
   }
 
   .field input {
@@ -208,16 +306,6 @@ const StyledWrapper = styled.div`
   }
   .field input::placeholder {
     color: #777;
-  }
-
-  .error-message {
-    background: #ef4444;
-    color: white;
-    padding: 0.5rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    text-align: center;
-    margin-bottom: 1rem;
   }
 
   .button1 {

@@ -1,3 +1,4 @@
+// src/components/Loader.js
 import React from 'react';
 import styled from 'styled-components';
 
@@ -27,7 +28,7 @@ const StyledWrapper = styled.div`
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: #fff;
+    background: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;

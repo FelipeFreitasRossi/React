@@ -1,22 +1,31 @@
 // src/pages/Home.js
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { useTheme } from '../contexts/ThemeContext';
 import { FiTrendingUp, FiShield, FiUsers, FiZap } from 'react-icons/fi';
 
-const Home = () => {
+const Home = ({ isAuthenticated }) => {
+  const { t } = useTheme();
+
   return (
     <StyledWrapper>
       <Hero>
         <HeroContent>
-          <HeroBadge>🚀 Plataforma Financeira</HeroBadge>
-          <HeroTitle>Gerencie seus investimentos com inteligência</HeroTitle>
-          <HeroSubtitle>
-            Acompanhe ações, gráficos em tempo real e tome decisões
-            baseadas em dados com nossa plataforma completa.
-          </HeroSubtitle>
+          <HeroBadge>{t('home.badge')}</HeroBadge>
+          <HeroTitle>{t('home.title')}</HeroTitle>
+          <HeroSubtitle>{t('home.subtitle')}</HeroSubtitle>
           <HeroButtons>
-            <PrimaryButton href="/dashboard">Acessar Dashboard</PrimaryButton>
-            <SecondaryButton href="#features">Conhecer mais</SecondaryButton>
+            {isAuthenticated ? (
+              <PrimaryButton as={Link} to="/dashboard">
+                {t('home.button.dashboard')}
+              </PrimaryButton>
+            ) : (
+              <PrimaryButton as={Link} to="/login">
+                {t('header.entrar')}
+              </PrimaryButton>
+            )}
+            <SecondaryButton href="#features">{t('home.button.conhecer')}</SecondaryButton>
           </HeroButtons>
         </HeroContent>
         <HeroImage>
@@ -38,39 +47,27 @@ const Home = () => {
       </Hero>
 
       <Features id="features">
-        <FeatureTitle>Por que escolher o FinDash?</FeatureTitle>
+        <FeatureTitle>{t('home.features.title')}</FeatureTitle>
         <FeatureGrid>
           <FeatureCard>
             <FeatureIcon><FiTrendingUp size={32} /></FeatureIcon>
-            <FeatureCardTitle>Dados em Tempo Real</FeatureCardTitle>
-            <FeatureCardText>
-              Acompanhe cotações e gráficos atualizados a cada segundo
-              com nossa conexão WebSocket.
-            </FeatureCardText>
+            <FeatureCardTitle>{t('home.features.realtime')}</FeatureCardTitle>
+            <FeatureCardText>{t('home.features.realtime.desc')}</FeatureCardText>
           </FeatureCard>
           <FeatureCard>
             <FeatureIcon><FiShield size={32} /></FeatureIcon>
-            <FeatureCardTitle>Segurança Total</FeatureCardTitle>
-            <FeatureCardText>
-              Autenticação JWT, senhas criptografadas e dados protegidos
-              com as melhores práticas.
-            </FeatureCardText>
+            <FeatureCardTitle>{t('home.features.security')}</FeatureCardTitle>
+            <FeatureCardText>{t('home.features.security.desc')}</FeatureCardText>
           </FeatureCard>
           <FeatureCard>
             <FeatureIcon><FiUsers size={32} /></FeatureIcon>
-            <FeatureCardTitle>Para Todos os Perfis</FeatureCardTitle>
-            <FeatureCardText>
-              Desde iniciantes até investidores avançados, nossa
-              plataforma atende todas as necessidades.
-            </FeatureCardText>
+            <FeatureCardTitle>{t('home.features.profiles')}</FeatureCardTitle>
+            <FeatureCardText>{t('home.features.profiles.desc')}</FeatureCardText>
           </FeatureCard>
           <FeatureCard>
             <FeatureIcon><FiZap size={32} /></FeatureIcon>
-            <FeatureCardTitle>Alta Performance</FeatureCardTitle>
-            <FeatureCardText>
-              Interface rápida e responsiva, otimizada para carregar
-              dados e gráficos sem demora.
-            </FeatureCardText>
+            <FeatureCardTitle>{t('home.features.performance')}</FeatureCardTitle>
+            <FeatureCardText>{t('home.features.performance.desc')}</FeatureCardText>
           </FeatureCard>
         </FeatureGrid>
       </Features>
@@ -78,10 +75,9 @@ const Home = () => {
   );
 };
 
-// ========== STYLED COMPONENTS ==========
 const StyledWrapper = styled.div`
   font-family: 'Inter', sans-serif;
-  background: #ffffff;
+  background: ${({ theme }) => theme.background || '#ffffff'};
 `;
 
 const Hero = styled.section`
@@ -93,7 +89,6 @@ const Hero = styled.section`
   margin: 0 auto;
   gap: 3rem;
   min-height: calc(100vh - 70px);
-
   @media (max-width: 768px) {
     flex-direction: column;
     text-align: center;
@@ -105,10 +100,7 @@ const Hero = styled.section`
 const HeroContent = styled.div`
   flex: 1;
   max-width: 600px;
-
-  @media (max-width: 768px) {
-    max-width: 100%;
-  }
+  @media (max-width: 768px) { max-width: 100%; }
 `;
 
 const HeroBadge = styled.span`
@@ -126,18 +118,15 @@ const HeroBadge = styled.span`
 const HeroTitle = styled.h1`
   font-size: 3.2rem;
   font-weight: 800;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   line-height: 1.15;
   margin-bottom: 1.2rem;
-
-  @media (max-width: 768px) {
-    font-size: 2.2rem;
-  }
+  @media (max-width: 768px) { font-size: 2.2rem; }
 `;
 
 const HeroSubtitle = styled.p`
   font-size: 1.15rem;
-  color: #475569;
+  color: ${({ theme }) => theme.textSecondary || '#475569'};
   line-height: 1.7;
   margin-bottom: 2rem;
 `;
@@ -146,10 +135,7 @@ const HeroButtons = styled.div`
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    justify-content: center;
-  }
+  @media (max-width: 768px) { justify-content: center; }
 `;
 
 const PrimaryButton = styled.a`
@@ -168,8 +154,8 @@ const SecondaryButton = styled.a`
   display: inline-block;
   padding: 0.8rem 2.2rem;
   background: transparent;
-  color: #0f172a;
-  border: 2px solid #e2e8f0;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
+  border: 2px solid ${({ theme }) => theme.border || '#e2e8f0'};
   border-radius: 40px;
   font-weight: 600;
   text-decoration: none;
@@ -180,29 +166,21 @@ const SecondaryButton = styled.a`
 const HeroImage = styled.div`
   flex: 1;
   max-width: 450px;
-
-  svg {
-    width: 100%;
-    height: auto;
-  }
-
-  @media (max-width: 768px) {
-    max-width: 100%;
-  }
+  svg { width: 100%; height: auto; }
+  @media (max-width: 768px) { max-width: 100%; }
 `;
 
 const Features = styled.section`
   padding: 4rem 2rem;
-  background: #f8fafc;
+  background: ${({ theme }) => theme.background || '#f8fafc'};
 `;
 
 const FeatureTitle = styled.h2`
   text-align: center;
   font-size: 2.2rem;
   font-weight: 700;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   margin-bottom: 3rem;
-
   &::after {
     content: '';
     display: block;
@@ -223,12 +201,12 @@ const FeatureGrid = styled.div`
 `;
 
 const FeatureCard = styled.div`
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || '#ffffff'};
   padding: 2rem 1.5rem;
   border-radius: 24px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  border: 1px solid #f1f5f9;
+  box-shadow: ${({ theme }) => theme.shadow || '0 4px 12px rgba(0,0,0,0.03)'};
+  border: 1px solid ${({ theme }) => theme.border || '#f1f5f9'};
   transition: transform 0.3s;
   &:hover { transform: translateY(-6px); }
 `;
@@ -241,13 +219,13 @@ const FeatureIcon = styled.div`
 const FeatureCardTitle = styled.h3`
   font-size: 1.2rem;
   font-weight: 600;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   margin-bottom: 0.6rem;
 `;
 
 const FeatureCardText = styled.p`
   font-size: 0.95rem;
-  color: #64748b;
+  color: ${({ theme }) => theme.textSecondary || '#64748b'};
   line-height: 1.6;
 `;
 

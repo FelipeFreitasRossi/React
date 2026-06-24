@@ -1,68 +1,52 @@
 // src/pages/About.js
 import React from 'react';
 import styled from 'styled-components';
+import { useTheme } from '../contexts/ThemeContext';
 import { FiUsers, FiTarget, FiGlobe, FiAward } from 'react-icons/fi';
 
 const About = () => {
+  const { t } = useTheme();
+
   return (
     <StyledWrapper>
       <Container>
-        <Title>Sobre o FinDash</Title>
-        <Subtitle>
-          Nossa missão é democratizar o acesso a informações financeiras
-          de qualidade, oferecendo ferramentas poderosas e intuitivas para
-          todos os investidores.
-        </Subtitle>
-
+        <Title>{t('about.title')}</Title>
+        <Subtitle>{t('about.subtitle')}</Subtitle>
         <Grid>
           <Card>
             <Icon><FiUsers size={36} /></Icon>
-            <CardTitle>Time Experiente</CardTitle>
-            <CardText>
-              Somos uma equipe apaixonada por tecnologia e finanças,
-              com anos de experiência no mercado.
-            </CardText>
+            <CardTitle>{t('about.team')}</CardTitle>
+            <CardText>{t('about.team.desc')}</CardText>
           </Card>
           <Card>
             <Icon><FiTarget size={36} /></Icon>
-            <CardTitle>Foco no Usuário</CardTitle>
-            <CardText>
-              Desenvolvemos cada funcionalidade pensando na melhor
-              experiência e usabilidade para você.
-            </CardText>
+            <CardTitle>{t('about.focus')}</CardTitle>
+            <CardText>{t('about.focus.desc')}</CardText>
           </Card>
           <Card>
             <Icon><FiGlobe size={36} /></Icon>
-            <CardTitle>Dados Globais</CardTitle>
-            <CardText>
-              Acesse dados de ações, criptomoedas e índices de todo o
-              mundo com alta precisão.
-            </CardText>
+            <CardTitle>{t('about.global')}</CardTitle>
+            <CardText>{t('about.global.desc')}</CardText>
           </Card>
           <Card>
             <Icon><FiAward size={36} /></Icon>
-            <CardTitle>Tecnologia de Ponta</CardTitle>
-            <CardText>
-              Utilizamos as mais modernas tecnologias para garantir
-              performance, segurança e escalabilidade.
-            </CardText>
+            <CardTitle>{t('about.tech')}</CardTitle>
+            <CardText>{t('about.tech.desc')}</CardText>
           </Card>
         </Grid>
-
         <CallToAction>
-          <h3>Pronto para começar?</h3>
-          <p>Crie sua conta e comece a acompanhar seus investimentos agora mesmo.</p>
-          <ActionButton href="/dashboard">Acessar Dashboard</ActionButton>
+          <h3>{t('about.cta.title')}</h3>
+          <p>{t('about.cta.desc')}</p>
+          <ActionButton href="/dashboard">{t('about.cta.button')}</ActionButton>
         </CallToAction>
       </Container>
     </StyledWrapper>
   );
 };
 
-// ========== STYLED COMPONENTS ==========
 const StyledWrapper = styled.div`
   font-family: 'Inter', sans-serif;
-  background: #ffffff;
+  background: ${({ theme }) => theme.background || '#ffffff'};
   padding-top: 70px;
   min-height: calc(100vh - 70px);
 `;
@@ -76,10 +60,9 @@ const Container = styled.div`
 const Title = styled.h1`
   font-size: 2.8rem;
   font-weight: 800;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   text-align: center;
   margin-bottom: 1rem;
-
   &::after {
     content: '';
     display: block;
@@ -94,7 +77,7 @@ const Title = styled.h1`
 const Subtitle = styled.p`
   text-align: center;
   font-size: 1.15rem;
-  color: #475569;
+  color: ${({ theme }) => theme.textSecondary || '#475569'};
   max-width: 700px;
   margin: 0 auto 3rem;
   line-height: 1.7;
@@ -108,7 +91,7 @@ const Grid = styled.div`
 `;
 
 const Card = styled.div`
-  background: #f8fafc;
+  background: ${({ theme }) => theme.cardBackground || '#f8fafc'};
   padding: 2rem 1.5rem;
   border-radius: 24px;
   text-align: center;
@@ -124,31 +107,26 @@ const Icon = styled.div`
 const CardTitle = styled.h3`
   font-size: 1.2rem;
   font-weight: 600;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   margin-bottom: 0.6rem;
 `;
 
 const CardText = styled.p`
   font-size: 0.95rem;
-  color: #64748b;
+  color: ${({ theme }) => theme.textSecondary || '#64748b'};
   line-height: 1.6;
 `;
 
 const CallToAction = styled.div`
   text-align: center;
-  background: #0f172a;
+  background: ${({ theme }) => theme.cardBackground || '#0f172a'};
   padding: 3rem 2rem;
   border-radius: 30px;
-  color: #fff;
+  color: ${({ theme }) => theme.textPrimary || '#fff'};
+  border: 1px solid ${({ theme }) => theme.border || '#1e293b'};
 
-  h3 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-  p {
-    color: #94a3b8;
-    margin-bottom: 1.5rem;
-  }
+  h3 { font-size: 2rem; margin-bottom: 0.5rem; }
+  p { color: ${({ theme }) => theme.textSecondary || '#94a3b8'}; margin-bottom: 1.5rem; }
 `;
 
 const ActionButton = styled.a`

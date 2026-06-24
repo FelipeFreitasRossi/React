@@ -1,19 +1,17 @@
 // src/pages/Contact.js
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useTheme } from '../contexts/ThemeContext';
 import { FiMail, FiPhone, FiMapPin, FiSend, FiCheckCircle } from 'react-icons/fi';
 
 const Contact = () => {
+  const { t } = useTheme();
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simula envio
     console.log('Dados enviados:', formData);
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 3000);
@@ -22,75 +20,49 @@ const Contact = () => {
   return (
     <StyledWrapper>
       <Container>
-        <Title>Entre em Contato</Title>
-        <Subtitle>
-          Tem dúvidas, sugestões ou quer saber mais sobre nossos serviços?
-          Envie uma mensagem e responderemos o mais breve possível.
-        </Subtitle>
-
+        <Title>{t('contact.title')}</Title>
+        <Subtitle>{t('contact.subtitle')}</Subtitle>
         <ContactGrid>
           <ContactInfo>
             <InfoCard>
               <FiMail size={24} />
               <div>
-                <h4>E-mail</h4>
+                <h4>{t('contact.email')}</h4>
                 <p>contato@findash.com</p>
               </div>
             </InfoCard>
             <InfoCard>
               <FiPhone size={24} />
               <div>
-                <h4>Telefone</h4>
+                <h4>{t('contact.phone')}</h4>
                 <p>+55 (11) 99999-9999</p>
               </div>
             </InfoCard>
             <InfoCard>
               <FiMapPin size={24} />
               <div>
-                <h4>Endereço</h4>
+                <h4>{t('contact.address')}</h4>
                 <p>São Paulo, SP - Brasil</p>
               </div>
             </InfoCard>
           </ContactInfo>
-
           <Form onSubmit={handleSubmit}>
             <FormGroup>
-              <Label>Nome</Label>
-              <Input
-                type="text"
-                name="name"
-                placeholder="Seu nome"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
+              <Label>{t('contact.form.name')}</Label>
+              <Input type="text" name="name" placeholder="Seu nome" value={formData.name} onChange={handleChange} required />
             </FormGroup>
             <FormGroup>
-              <Label>E-mail</Label>
-              <Input
-                type="email"
-                name="email"
-                placeholder="seu@email.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+              <Label>{t('contact.form.email')}</Label>
+              <Input type="email" name="email" placeholder="seu@email.com" value={formData.email} onChange={handleChange} required />
             </FormGroup>
             <FormGroup>
-              <Label>Mensagem</Label>
-              <Textarea
-                name="message"
-                rows="5"
-                placeholder="Sua mensagem..."
-                value={formData.message}
-                onChange={handleChange}
-                required
-              />
+              <Label>{t('contact.form.message')}</Label>
+              <Textarea name="message" rows="5" placeholder="Sua mensagem..." value={formData.message} onChange={handleChange} required />
             </FormGroup>
             <SubmitButton type="submit">
-              <FiSend size={18} /> Enviar Mensagem
+              <FiSend /> {t('contact.form.send')}
             </SubmitButton>
-            {submitted && <SuccessMessage><FiCheckCircle /> Mensagem enviada com sucesso!</SuccessMessage>}
+            {submitted && <SuccessMessage><FiCheckCircle /> {t('contact.form.success')}</SuccessMessage>}
           </Form>
         </ContactGrid>
       </Container>
@@ -98,10 +70,9 @@ const Contact = () => {
   );
 };
 
-// ========== STYLED COMPONENTS ==========
 const StyledWrapper = styled.div`
   font-family: 'Inter', sans-serif;
-  background: #ffffff;
+  background: ${({ theme }) => theme.background || '#ffffff'};
   padding-top: 70px;
   min-height: calc(100vh - 70px);
 `;
@@ -115,9 +86,8 @@ const Container = styled.div`
 const Title = styled.h1`
   font-size: 2.8rem;
   font-weight: 800;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   text-align: center;
-
   &::after {
     content: '';
     display: block;
@@ -132,7 +102,7 @@ const Title = styled.h1`
 const Subtitle = styled.p`
   text-align: center;
   font-size: 1.15rem;
-  color: #475569;
+  color: ${({ theme }) => theme.textSecondary || '#475569'};
   max-width: 700px;
   margin: 1.2rem auto 3rem;
   line-height: 1.7;
@@ -142,7 +112,6 @@ const ContactGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 3rem;
-
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -159,19 +128,20 @@ const InfoCard = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: #f8fafc;
+  background: ${({ theme }) => theme.cardBackground || '#f8fafc'};
   padding: 1.2rem 1.5rem;
   border-radius: 16px;
-
+  border: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
   svg { color: #3b82f6; flex-shrink: 0; }
-  h4 { font-size: 1rem; color: #0f172a; margin: 0; }
-  p { font-size: 0.95rem; color: #64748b; margin: 0; }
+  h4 { font-size: 1rem; color: ${({ theme }) => theme.textPrimary || '#0f172a'}; margin: 0; }
+  p { font-size: 0.95rem; color: ${({ theme }) => theme.textSecondary || '#64748b'}; margin: 0; }
 `;
 
 const Form = styled.form`
-  background: #f8fafc;
+  background: ${({ theme }) => theme.cardBackground || '#f8fafc'};
   padding: 2rem;
   border-radius: 24px;
+  border: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
 `;
 
 const FormGroup = styled.div`
@@ -181,7 +151,7 @@ const FormGroup = styled.div`
 const Label = styled.label`
   display: block;
   font-weight: 500;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   margin-bottom: 0.4rem;
   font-size: 0.95rem;
 `;
@@ -189,8 +159,10 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: 0.7rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid ${({ theme }) => theme.border || '#e2e8f0'};
   border-radius: 12px;
+  background: ${({ theme }) => theme.inputBackground || '#ffffff'};
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   font-size: 1rem;
   outline: none;
   transition: border 0.2s;
@@ -200,8 +172,10 @@ const Input = styled.input`
 const Textarea = styled.textarea`
   width: 100%;
   padding: 0.7rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid ${({ theme }) => theme.border || '#e2e8f0'};
   border-radius: 12px;
+  background: ${({ theme }) => theme.inputBackground || '#ffffff'};
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   font-size: 1rem;
   outline: none;
   font-family: inherit;

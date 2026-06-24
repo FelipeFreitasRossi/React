@@ -1,40 +1,21 @@
 // src/components/Dashboard.js
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useTheme } from '../contexts/ThemeContext';
 import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import {
-  FiRefreshCw,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiActivity,
-  FiLogOut,
-  FiBarChart2,
-  FiArrowUp,
-  FiArrowDown,
+  FiRefreshCw, FiTrendingUp, FiTrendingDown, FiActivity,
+  FiLogOut, FiBarChart2, FiArrowUp, FiArrowDown
 } from 'react-icons/fi';
 import { io } from 'socket.io-client';
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const pulse = keyframes`
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-`;
+const fadeIn = keyframes` from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } `;
+const pulse = keyframes` 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } `;
 
 const Dashboard = ({ onLogout }) => {
+  const { t } = useTheme();
   const [symbol, setSymbol] = useState('AAPL');
   const [companyName, setCompanyName] = useState('');
   const [period, setPeriod] = useState('1mo');
@@ -44,12 +25,7 @@ const Dashboard = ({ onLogout }) => {
   const [priceChangePercent, setPriceChangePercent] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    open: 0,
-    high: 0,
-    low: 0,
-    volume: 0,
-  });
+  const [stats, setStats] = useState({ open: 0, high: 0, low: 0, volume: 0 });
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -58,15 +34,8 @@ const Dashboard = ({ onLogout }) => {
   }, [symbol, period]);
 
   useEffect(() => {
-    socketRef.current = io('ws://localhost:8765', {
-      transports: ['websocket'],
-      reconnectionAttempts: 5,
-    });
-
-    socketRef.current.on('connect', () => {
-      console.log('✅ Conectado ao WebSocket');
-    });
-
+    socketRef.current = io('ws://localhost:8765', { transports: ['websocket'], reconnectionAttempts: 5 });
+    socketRef.current.on('connect', () => console.log('✅ Conectado ao WebSocket'));
     socketRef.current.on('message', (data) => {
       const parsed = JSON.parse(data);
       setLivePrice(parsed.price);
@@ -79,39 +48,18 @@ const Dashboard = ({ onLogout }) => {
           updated[updated.length - 1] = { ...last, Close: parsed.price };
           return updated;
         }
-        return [
-          ...prev,
-          {
-            Date: today,
-            Open: parsed.price,
-            High: parsed.price,
-            Low: parsed.price,
-            Close: parsed.price,
-            Volume: 0,
-          },
-        ];
+        return [...prev, { Date: today, Open: parsed.price, High: parsed.price, Low: parsed.price, Close: parsed.price, Volume: 0 }];
       });
     });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
+    return () => { if (socketRef.current) socketRef.current.disconnect(); };
   }, []);
 
   const fetchCompanyInfo = async (sym) => {
     try {
       const res = await fetch(`http://localhost:5000/api/company-info?symbol=${sym}`);
       const data = await res.json();
-      if (!data.error) {
-        setCompanyName(data.name || sym);
-      } else {
-        setCompanyName(sym);
-      }
-    } catch (err) {
-      setCompanyName(sym);
-    }
+      setCompanyName(data.name || sym);
+    } catch { setCompanyName(sym); }
   };
 
   const fetchHistorical = async (sym, period) => {
@@ -126,8 +74,8 @@ const Dashboard = ({ onLogout }) => {
           const last = data[data.length - 1];
           const first = data[0];
           const open = data[0]?.Open || 0;
-          const high = Math.max(...data.map((d) => d.High || 0));
-          const low = Math.min(...data.map((d) => d.Low || Infinity));
+          const high = Math.max(...data.map(d => d.High || 0));
+          const low = Math.min(...data.map(d => d.Low || Infinity));
           const volume = data.reduce((acc, d) => acc + (d.Volume || 0), 0);
           setStats({ open, high, low, volume });
           const change = last.Close - first.Open;
@@ -148,88 +96,67 @@ const Dashboard = ({ onLogout }) => {
   const calculateSMA = (data, window) => {
     const sma = [];
     for (let i = 0; i < data.length; i++) {
-      if (i < window - 1) {
-        sma.push(null);
-        continue;
-      }
+      if (i < window - 1) { sma.push(null); continue; }
       let sum = 0;
-      for (let j = i - window + 1; j <= i; j++) {
-        sum += data[j].Close;
-      }
+      for (let j = i - window + 1; j <= i; j++) sum += data[j].Close;
       sma.push(+(sum / window).toFixed(2));
     }
     return sma;
   };
 
-  const chartData = historicalData.map((item) => ({ ...item, SMA7: null, SMA21: null }));
+  const chartData = historicalData.map(item => ({ ...item, SMA7: null, SMA21: null }));
   if (historicalData.length > 0) {
     const sma7 = calculateSMA(historicalData, 7);
     const sma21 = calculateSMA(historicalData, 21);
-    chartData.forEach((item, i) => {
-      item.SMA7 = sma7[i];
-      item.SMA21 = sma21[i];
-    });
+    chartData.forEach((item, i) => { item.SMA7 = sma7[i]; item.SMA21 = sma21[i]; });
   }
 
   const formatCurrency = (value) => `$${value?.toFixed(2) || '---'}`;
-  const formatVolume = (value) => (value ? (value / 1e6).toFixed(1) + 'M' : '---');
-  const formatDate = (date) => {
-    const d = new Date(date);
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  };
+  const formatVolume = (value) => value ? (value / 1e6).toFixed(1) + 'M' : '---';
+  const formatDate = (date) => new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 
   const periods = [
-    { label: '1D', value: '1d' },
-    { label: '1S', value: '5d' },
-    { label: '1M', value: '1mo' },
-    { label: '3M', value: '3mo' },
-    { label: '1A', value: '1y' },
-    { label: '5A', value: '5y' },
+    { label: '1D', value: '1d' }, { label: '1S', value: '5d' }, { label: '1M', value: '1mo' },
+    { label: '3M', value: '3mo' }, { label: '1A', value: '1y' }, { label: '5A', value: '5y' },
   ];
 
   return (
     <StyledWrapper>
+      <Header>
+        <Logo><FiActivity size={28} /> FinDash</Logo>
+        <SearchBox>
+          <input type="text" value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder={t('dashboard.symbol')} />
+          <button onClick={() => fetchHistorical(symbol, period)}><FiRefreshCw /></button>
+        </SearchBox>
+        <RightHeader>
+          <PriceInfo>
+            <span><CompanyName>{companyName}</CompanyName><strong>{symbol}</strong></span>
+            <span>{t('dashboard.price')}: {livePrice ? formatCurrency(livePrice) : '---'}</span>
+            <span style={{ color: priceChange >= 0 ? '#22c55e' : '#ef4444', background: priceChange >= 0 ? '#dcfce7' : '#fee2e2', padding: '0.2rem 0.8rem', borderRadius: '40px', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+              {priceChange >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
+              {priceChangePercent.toFixed(2)}%
+            </span>
+          </PriceInfo>
+          <LogoutButton onClick={onLogout}><FiLogOut size={16} /> {t('header.sair')}</LogoutButton>
+        </RightHeader>
+      </Header>
+
       <MainContent>
-        {/* Períodos */}
         <PeriodSelector>
-          {periods.map((p) => (
-            <PeriodButton
-              key={p.value}
-              active={period === p.value}
-              onClick={() => setPeriod(p.value)}
-            >
-              {p.label}
-            </PeriodButton>
-          ))}
+          {periods.map(p => <PeriodButton key={p.value} active={period === p.value} onClick={() => setPeriod(p.value)}>{p.label}</PeriodButton>)}
         </PeriodSelector>
 
-        {/* Estatísticas rápidas */}
         <StatsGrid>
-          <StatCard>
-            <StatLabel><FiArrowUp color="#22c55e" /> Abertura</StatLabel>
-            <StatValue>{formatCurrency(stats.open)}</StatValue>
-          </StatCard>
-          <StatCard>
-            <StatLabel><FiArrowUp color="#22c55e" /> Máxima</StatLabel>
-            <StatValue>{formatCurrency(stats.high)}</StatValue>
-          </StatCard>
-          <StatCard>
-            <StatLabel><FiArrowDown color="#ef4444" /> Mínima</StatLabel>
-            <StatValue>{formatCurrency(stats.low)}</StatValue>
-          </StatCard>
-          <StatCard>
-            <StatLabel><FiBarChart2 /> Volume</StatLabel>
-            <StatValue>{formatVolume(stats.volume)}</StatValue>
-          </StatCard>
+          <StatCard><StatLabel><FiArrowUp color="#22c55e" /> {t('dashboard.open')}</StatLabel><StatValue>{formatCurrency(stats.open)}</StatValue></StatCard>
+          <StatCard><StatLabel><FiArrowUp color="#22c55e" /> {t('dashboard.high')}</StatLabel><StatValue>{formatCurrency(stats.high)}</StatValue></StatCard>
+          <StatCard><StatLabel><FiArrowDown color="#ef4444" /> {t('dashboard.low')}</StatLabel><StatValue>{formatCurrency(stats.low)}</StatValue></StatCard>
+          <StatCard><StatLabel><FiBarChart2 /> {t('dashboard.volume')}</StatLabel><StatValue>{formatVolume(stats.volume)}</StatValue></StatCard>
         </StatsGrid>
 
-        {/* Gráfico principal */}
         <ChartCard>
           <ChartHeader>
-            <ChartTitle>Gráfico de Velas</ChartTitle>
-            <ChartSubtitle>
-              {companyName} ({symbol}) · {new Date().toLocaleDateString('pt-BR')}
-            </ChartSubtitle>
+            <ChartTitle>{t('dashboard.chart.title')}</ChartTitle>
+            <ChartSubtitle>{companyName} ({symbol}) · {new Date().toLocaleDateString('pt-BR')}</ChartSubtitle>
           </ChartHeader>
           <ResponsiveContainer width="100%" height={400}>
             {loading ? (
@@ -248,11 +175,9 @@ const Dashboard = ({ onLogout }) => {
                 <XAxis dataKey="Date" tickFormatter={formatDate} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <YAxis yAxisId="left" domain={['auto', 'auto']} tickFormatter={formatCurrency} tick={{ fontSize: 11, fill: '#64748b' }} width={70} />
                 <YAxis yAxisId="right" orientation="right" domain={[0, 'auto']} tickFormatter={formatVolume} tick={{ fontSize: 11, fill: '#64748b' }} width={50} />
-                <Tooltip
-                  contentStyle={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #e2e8f0', borderRadius: '8px' }}
                   formatter={(value, name) => name === 'Volume' ? formatVolume(value) : formatCurrency(value)}
-                  labelFormatter={(label) => `Data: ${label}`}
-                />
+                  labelFormatter={(label) => `Data: ${label}`} />
                 <Bar yAxisId="left" dataKey="Close" fill="#3b82f6" barSize={4} opacity={0.9} />
                 <Line yAxisId="left" type="monotone" dataKey="SMA7" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls />
                 <Line yAxisId="left" type="monotone" dataKey="SMA21" stroke="#8b5cf6" strokeWidth={2} dot={false} connectNulls />
@@ -268,12 +193,18 @@ const Dashboard = ({ onLogout }) => {
           </LegendContainer>
         </ChartCard>
 
-        {/* Tabela de cotações */}
         <TableCard>
-          <TableTitle>Últimas 10 cotações</TableTitle>
+          <TableTitle>{t('dashboard.table.title')}</TableTitle>
           <Table>
             <thead>
-              <tr><th>Data</th><th>Abertura</th><th>Máxima</th><th>Mínima</th><th>Fechamento</th><th>Volume</th></tr>
+              <tr>
+                <th>Data</th>
+                <th>{t('dashboard.open')}</th>
+                <th>{t('dashboard.high')}</th>
+                <th>{t('dashboard.low')}</th>
+                <th>{t('dashboard.close')}</th>
+                <th>{t('dashboard.volume')}</th>
+              </tr>
             </thead>
             <tbody>
               {historicalData.slice(-10).reverse().map((item, idx) => (
@@ -294,35 +225,109 @@ const Dashboard = ({ onLogout }) => {
   );
 };
 
-// No StyledWrapper do Dashboard.js
+// ========== STYLED COMPONENTS ==========
 const StyledWrapper = styled.div`
-  font-family: 'Inter', ...;
-  background: #f1f5f9;
+  font-family: 'Inter', sans-serif;
+  background: ${({ theme }) => theme.background || '#f1f5f9'};
   min-height: calc(100vh - 70px);
   padding: clamp(1rem, 3vw, 2rem);
   padding-top: calc(70px + 1.5rem);
   animation: ${fadeIn} 0.6s ease-out;
-  @media (max-width: 768px) {
-    padding-top: calc(60px + 1rem);
+  @media (max-width: 768px) { padding-top: calc(60px + 1rem); }
+`;
+
+const Header = styled.header`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: ${({ theme }) => theme.cardBackground || '#ffffff'};
+  border-radius: 20px;
+  box-shadow: ${({ theme }) => theme.shadow || '0 4px 12px rgba(0,0,0,0.03)'};
+  margin-bottom: 1.5rem;
+`;
+
+const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 700;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
+`;
+
+const SearchBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 250px;
+  max-width: 400px;
+  input { flex:1; padding:0.6rem 1rem; border:2px solid ${({ theme }) => theme.border || '#e2e8f0'}; border-radius:40px; font-size:1rem; outline:none; background:${({ theme }) => theme.inputBackground || '#fff'}; color:${({ theme }) => theme.textPrimary || '#0f172a'}; &:focus { border-color:#3b82f6; } }
+  button { background:#3b82f6; color:#fff; border:none; border-radius:40px; padding:0.6rem 1.2rem; cursor:pointer; transition:background .2s; display:flex; align-items:center; justify-content:center; &:hover { background:#2563eb; } }
+`;
+
+const RightHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+`;
+
+const CompanyName = styled.span`
+  font-weight: 300;
+  color: ${({ theme }) => theme.textSecondary || '#64748b'};
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+`;
+
+const PriceInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 500;
+  flex-wrap: wrap;
+  span {
+    background: ${({ theme }) => theme.cardBackground || '#f8fafc'};
+    padding: 0.3rem 0.8rem;
+    border-radius: 40px;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
+`;
+
+const LogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.4rem 1.2rem;
+  border-radius: 40px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: #dc2626; }
 `;
 
 const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
 `;
 
 const PeriodSelector = styled.div`
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || '#fff'};
   padding: 0.5rem 1rem;
   border-radius: 40px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: ${({ theme }) => theme.shadow || '0 4px 12px rgba(0,0,0,0.02)'};
   align-self: flex-start;
 `;
 
@@ -330,12 +335,12 @@ const PeriodButton = styled.button`
   padding: 0.3rem 1rem;
   border-radius: 30px;
   border: none;
-  background: ${({ active }) => (active ? '#3b82f6' : 'transparent')};
-  color: ${({ active }) => (active ? '#fff' : '#64748b')};
+  background: ${({ active }) => active ? '#3b82f6' : 'transparent'};
+  color: ${({ active }) => active ? '#fff' : '#64748b'};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  &:hover { background: ${({ active }) => (active ? '#2563eb' : '#f1f5f9')}; }
+  &:hover { background: ${({ active }) => active ? '#2563eb' : '#f1f5f9'}; }
 `;
 
 const StatsGrid = styled.div`
@@ -345,15 +350,15 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || '#ffffff'};
   padding: 1rem 1.2rem;
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: ${({ theme }) => theme.shadow || '0 4px 12px rgba(0,0,0,0.02)'};
 `;
 
 const StatLabel = styled.div`
   font-size: 0.75rem;
-  color: #64748b;
+  color: ${({ theme }) => theme.textSecondary || '#64748b'};
   text-transform: uppercase;
   display: flex;
   align-items: center;
@@ -363,15 +368,15 @@ const StatLabel = styled.div`
 const StatValue = styled.div`
   font-size: 1.4rem;
   font-weight: 700;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   margin-top: 0.2rem;
 `;
 
 const ChartCard = styled.div`
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || '#ffffff'};
   padding: 1.5rem;
   border-radius: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: ${({ theme }) => theme.shadow || '0 4px 12px rgba(0,0,0,0.02)'};
 `;
 
 const ChartHeader = styled.div`
@@ -385,12 +390,12 @@ const ChartHeader = styled.div`
 const ChartTitle = styled.h3`
   font-size: 1.2rem;
   font-weight: 600;
-  color: #0f172a;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
 `;
 
 const ChartSubtitle = styled.span`
   font-size: 0.9rem;
-  color: #64748b;
+  color: ${({ theme }) => theme.textSecondary || '#64748b'};
 `;
 
 const LegendContainer = styled.div`
@@ -406,7 +411,7 @@ const LegendItem = styled.div`
   align-items: center;
   gap: 0.4rem;
   font-size: 0.85rem;
-  color: #475569;
+  color: ${({ theme }) => theme.textSecondary || '#475569'};
   &::before {
     content: '';
     display: inline-block;
@@ -423,24 +428,24 @@ const SkeletonPlaceholder = styled.div`
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: #94a3b8;
+  color: ${({ theme }) => theme.textSecondary || '#94a3b8'};
   animation: ${pulse} 1.5s infinite;
   span { font-size: 1rem; }
 `;
 
 const TableCard = styled.div`
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || '#ffffff'};
   padding: 1.5rem;
   border-radius: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: ${({ theme }) => theme.shadow || '0 4px 12px rgba(0,0,0,0.02)'};
   overflow-x: auto;
 `;
 
 const TableTitle = styled.h3`
   font-size: 1.2rem;
   font-weight: 600;
+  color: ${({ theme }) => theme.textPrimary || '#0f172a'};
   margin-bottom: 1rem;
-  color: #0f172a;
 `;
 
 const Table = styled.table`
@@ -451,13 +456,13 @@ const Table = styled.table`
   th {
     text-align: left;
     padding: 0.7rem 0.5rem;
-    color: #64748b;
+    color: ${({ theme }) => theme.textSecondary || '#64748b'};
     font-weight: 500;
-    border-bottom: 2px solid #f1f5f9;
+    border-bottom: 2px solid ${({ theme }) => theme.border || '#f1f5f9'};
   }
   td {
     padding: 0.6rem 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid ${({ theme }) => theme.border || '#f1f5f9'};
   }
   tr:last-child td { border-bottom: none; }
 `;
