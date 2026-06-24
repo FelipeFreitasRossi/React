@@ -15,19 +15,17 @@ const LoginForm = ({ onLogin, onSignUp }) => {
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
 
-  // ========== VALIDAÇÕES ==========
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
   const validate = () => {
     const newErrors = {};
     if (!formData.email) newErrors.email = 'E-mail é obrigatório';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'E-mail inválido';
-    
     if (isSignUp) {
       if (!formData.username) newErrors.username = 'Usuário é obrigatório';
       else if (formData.username.length < 3) newErrors.username = 'Usuário deve ter pelo menos 3 caracteres';
-      
       if (!formData.password) newErrors.password = 'Senha é obrigatória';
       else if (formData.password.length < 6) newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
-      
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'As senhas não coincidem';
       }
@@ -37,7 +35,6 @@ const LoginForm = ({ onLogin, onSignUp }) => {
     return newErrors;
   };
 
-  // ========== ENVIO DO FORMULÁRIO ==========
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
@@ -55,7 +52,7 @@ const LoginForm = ({ onLogin, onSignUp }) => {
         ? { username: formData.username, email: formData.email, password: formData.password }
         : { email: formData.email, password: formData.password };
 
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -64,14 +61,11 @@ const LoginForm = ({ onLogin, onSignUp }) => {
       
       if (res.ok) {
         if (isSignUp) {
-          // ✅ CADASTRO BEM-SUCEDIDO: volta para o login com mensagem
           setGeneralError('✅ Cadastro realizado! Faça login para continuar.');
           setIsSignUp(false);
           setFormData({ username: '', email: '', password: '', confirmPassword: '' });
           setErrors({});
-          // NÃO autentica o usuário – apenas mostra a mensagem
         } else {
-          // Login bem-sucedido
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           onLogin(data.user.username, data.user.email);
@@ -86,7 +80,6 @@ const LoginForm = ({ onLogin, onSignUp }) => {
     }
   };
 
-  // ========== ALTERNAR ENTRE LOGIN E CADASTRO ==========
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
     setErrors({});
@@ -94,50 +87,31 @@ const LoginForm = ({ onLogin, onSignUp }) => {
     setFormData({ username: '', email: '', password: '', confirmPassword: '' });
   };
 
-  // ========== ATUALIZAR CAMPOS ==========
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     if (errors[name]) setErrors({ ...errors, [name]: '' });
   };
 
-  // ========== RENDER ==========
   return (
     <StyledWrapper>
       <div className="container">
         <div className={`forms-container ${isSignUp ? 'slide' : ''}`}>
-          {/* ===== FORMULÁRIO DE LOGIN ===== */}
+          {/* Login */}
           <div className="form login-form">
             <h2>Login</h2>
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <FiMail className="input-icon" />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="E-mail"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="email" name="email" placeholder="E-mail" value={formData.email} onChange={handleChange} required />
               </div>
               {errors.email && <ErrorMessage><FiAlertCircle /> {errors.email}</ErrorMessage>}
-
               <div className="field">
                 <FiLock className="input-icon" />
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Senha"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="password" name="password" placeholder="Senha" value={formData.password} onChange={handleChange} required />
               </div>
               {errors.password && <ErrorMessage><FiAlertCircle /> {errors.password}</ErrorMessage>}
-
               {generalError && <ErrorMessage><FiAlertCircle /> {generalError}</ErrorMessage>}
-
               <button type="submit" className="button1" disabled={loading}>
                 {loading ? 'Carregando...' : 'Login'}
               </button>
@@ -150,64 +124,31 @@ const LoginForm = ({ onLogin, onSignUp }) => {
             </form>
           </div>
 
-          {/* ===== FORMULÁRIO DE CADASTRO ===== */}
+          {/* Cadastro */}
           <div className="form signup-form">
             <h2>Cadastro</h2>
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <FiUser className="input-icon" />
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="Usuário"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="text" name="username" placeholder="Usuário" value={formData.username} onChange={handleChange} required />
               </div>
               {errors.username && <ErrorMessage><FiAlertCircle /> {errors.username}</ErrorMessage>}
-
               <div className="field">
                 <FiMail className="input-icon" />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="E-mail"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="email" name="email" placeholder="E-mail" value={formData.email} onChange={handleChange} required />
               </div>
               {errors.email && <ErrorMessage><FiAlertCircle /> {errors.email}</ErrorMessage>}
-
               <div className="field">
                 <FiLock className="input-icon" />
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Senha (mínimo 6 caracteres)"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="password" name="password" placeholder="Senha (mínimo 6 caracteres)" value={formData.password} onChange={handleChange} required />
               </div>
               {errors.password && <ErrorMessage><FiAlertCircle /> {errors.password}</ErrorMessage>}
-
               <div className="field">
                 <FiLock className="input-icon" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirmar senha"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="password" name="confirmPassword" placeholder="Confirmar senha" value={formData.confirmPassword} onChange={handleChange} required />
               </div>
               {errors.confirmPassword && <ErrorMessage><FiAlertCircle /> {errors.confirmPassword}</ErrorMessage>}
-
               {generalError && <ErrorMessage><FiAlertCircle /> {generalError}</ErrorMessage>}
-
               <button type="submit" className="button1" disabled={loading}>
                 {loading ? 'Carregando...' : 'Cadastrar'}
               </button>
@@ -222,7 +163,6 @@ const LoginForm = ({ onLogin, onSignUp }) => {
   );
 };
 
-// ========== STYLED COMPONENTS ==========
 const ErrorMessage = styled.div`
   color: #ef4444;
   font-size: 0.85rem;
@@ -244,7 +184,7 @@ const StyledWrapper = styled.div`
   .container {
     background: #171717;
     border-radius: 25px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     width: 100%;
     max-width: 420px;
     overflow: hidden;
@@ -284,7 +224,7 @@ const StyledWrapper = styled.div`
     border-radius: 25px;
     padding: 0.6em 1em;
     background-color: #252525;
-    box-shadow: inset 2px 5px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 2px 5px 10px rgba(0,0,0,0.5);
     margin-bottom: 1rem;
   }
 

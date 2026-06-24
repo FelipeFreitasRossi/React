@@ -1,5 +1,5 @@
 // src/components/Dashboard.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -27,46 +27,21 @@ const Dashboard = ({ onLogout }) => {
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({ open: 0, high: 0, low: 0, volume: 0 });
   const socketRef = useRef(null);
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-  useEffect(() => {
-    fetchHistorical(symbol, period);
-    fetchCompanyInfo(symbol);
-  }, [symbol, period]);
-
-  useEffect(() => {
-    socketRef.current = io('ws://localhost:8765', { transports: ['websocket'], reconnectionAttempts: 5 });
-    socketRef.current.on('connect', () => console.log('✅ Conectado ao WebSocket'));
-    socketRef.current.on('message', (data) => {
-      const parsed = JSON.parse(data);
-      setLivePrice(parsed.price);
-      setHistoricalData((prev) => {
-        if (prev.length === 0) return prev;
-        const last = prev[prev.length - 1];
-        const today = new Date().toISOString().slice(0, 10);
-        if (last.Date === today) {
-          const updated = [...prev];
-          updated[updated.length - 1] = { ...last, Close: parsed.price };
-          return updated;
-        }
-        return [...prev, { Date: today, Open: parsed.price, High: parsed.price, Low: parsed.price, Close: parsed.price, Volume: 0 }];
-      });
-    });
-    return () => { if (socketRef.current) socketRef.current.disconnect(); };
-  }, []);
-
-  const fetchCompanyInfo = async (sym) => {
+  const fetchCompanyInfo = useCallback(async (sym) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/company-info?symbol=${sym}`);
+      const res = await fetch(`${API_URL}/api/company-info?symbol=${sym}`);
       const data = await res.json();
       setCompanyName(data.name || sym);
     } catch { setCompanyName(sym); }
-  };
+  }, [API_URL]);
 
-  const fetchHistorical = async (sym, period) => {
+  const fetchHistorical = useCallback(async (sym, period) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:5000/api/historical?symbol=${sym}&period=${period}`);
+      const res = await fetch(`${API_URL}/api/historical?symbol=${sym}&period=${period}`);
       const data = await res.json();
       if (!data.error) {
         setHistoricalData(data);
@@ -91,7 +66,33 @@ const Dashboard = ({ onLogout }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
+
+  useEffect(() => {
+    fetchHistorical(symbol, period);
+    fetchCompanyInfo(symbol);
+  }, [symbol, period, fetchHistorical, fetchCompanyInfo]);
+
+  useEffect(() => {
+    socketRef.current = io('ws://localhost:8765', { transports: ['websocket'], reconnectionAttempts: 5 });
+    socketRef.current.on('connect', () => console.log('✅ Conectado ao WebSocket'));
+    socketRef.current.on('message', (data) => {
+      const parsed = JSON.parse(data);
+      setLivePrice(parsed.price);
+      setHistoricalData((prev) => {
+        if (prev.length === 0) return prev;
+        const last = prev[prev.length - 1];
+        const today = new Date().toISOString().slice(0, 10);
+        if (last.Date === today) {
+          const updated = [...prev];
+          updated[updated.length - 1] = { ...last, Close: parsed.price };
+          return updated;
+        }
+        return [...prev, { Date: today, Open: parsed.price, High: parsed.price, Low: parsed.price, Close: parsed.price, Volume: 0 }];
+      });
+    });
+    return () => { if (socketRef.current) socketRef.current.disconnect(); };
+  }, []);
 
   const calculateSMA = (data, window) => {
     const sma = [];

@@ -14,14 +14,14 @@ import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Crypto from './pages/Crypto';
-import ScrollToTop from './components/ScrollToTop'; // ← importe o ScrollToTop
+import ScrollToTop from './components/ScrollToTop';
 
-// Componente interno para acessar o tema
 const AppContent = () => {
   const { currentTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     const validateSession = async () => {
@@ -32,7 +32,7 @@ const AppContent = () => {
         return;
       }
       try {
-        const res = await fetch('http://localhost:5000/api/me', {
+        const res = await fetch(`${API_URL}/api/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -55,7 +55,7 @@ const AppContent = () => {
     };
     const timer = setTimeout(() => validateSession(), 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [API_URL]);
 
   const handleLogin = (username, email) => {
     const userData = { username, email };
@@ -86,7 +86,7 @@ const AppContent = () => {
   return (
     <StyledThemeProvider theme={currentTheme}>
       <Router>
-        <ScrollToTop /> {/* ← Adicione aqui, dentro do Router */}
+        <ScrollToTop />
         <Header user={user} onLogout={handleLogout} />
         <Routes>
           <Route path="/" element={<Home isAuthenticated={isAuthenticated} />} />

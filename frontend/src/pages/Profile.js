@@ -18,6 +18,7 @@ const Profile = ({ user, updateUser }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const fileInputRef = useRef(null);
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
@@ -43,7 +44,7 @@ const Profile = ({ user, updateUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/update-profile', {
+      const res = await fetch(`${API_URL}/api/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
