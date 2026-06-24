@@ -1,5 +1,5 @@
 // src/pages/Crypto.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { useTheme } from '../contexts/ThemeContext';
 import { FiTrendingUp, FiTrendingDown, FiRefreshCw } from 'react-icons/fi';
@@ -11,10 +11,33 @@ const Crypto = () => {
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
 
+  // 🔹 Envolva fetchPrices em useCallback para estabilizar a referência
+  const fetchPrices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('http://localhost:5000/api/crypto-prices');
+      if (!res.ok) throw new Error(t('crypto.error'));
+      const data = await res.json();
+      setPrices(data);
+    } catch (err) {
+      setError(err.message);
+      setPrices([
+        { symbol: 'BTC-USD', name: 'Bitcoin', price: 60000, change_24h: 2.5 },
+        { symbol: 'ETH-USD', name: 'Ethereum', price: 3000, change_24h: -1.2 },
+        { symbol: 'USDBRL=X', name: 'Dólar/BRL', price: 5.20, change_24h: 0.3 },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [t]); // depende de t (tradução)
+
+  // 🔹 Adicione fetchPrices à lista de dependências
   useEffect(() => {
     fetchPrices();
-  }, []);
+  }, [fetchPrices]);
 
+  // WebSocket (sem alterações)
   useEffect(() => {
     socketRef.current = new WebSocket('ws://localhost:8765');
     socketRef.current.onopen = () => console.log('✅ WebSocket conectado');
@@ -37,26 +60,6 @@ const Crypto = () => {
     socketRef.current.onclose = () => console.log('WebSocket desconectado');
     return () => { if (socketRef.current) socketRef.current.close(); };
   }, []);
-
-  const fetchPrices = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('http://localhost:5000/api/crypto-prices');
-      if (!res.ok) throw new Error(t('crypto.error'));
-      const data = await res.json();
-      setPrices(data);
-    } catch (err) {
-      setError(err.message);
-      setPrices([
-        { symbol: 'BTC-USD', name: 'Bitcoin', price: 60000, change_24h: 2.5 },
-        { symbol: 'ETH-USD', name: 'Ethereum', price: 3000, change_24h: -1.2 },
-        { symbol: 'USDBRL=X', name: 'Dólar/BRL', price: 5.20, change_24h: 0.3 },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatCurrency = (value) => {
     if (value >= 1000) return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -95,6 +98,7 @@ const Crypto = () => {
   );
 };
 
+// ========== STYLED COMPONENTS ==========
 const StyledWrapper = styled.div`
   font-family: 'Inter', sans-serif;
   background: ${({ theme }) => theme.background || '#f8fafc'};
