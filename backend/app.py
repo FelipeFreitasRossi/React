@@ -6,6 +6,7 @@ import threading
 import jwt
 import bcrypt
 import re
+import os
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -13,27 +14,34 @@ from flask_sqlalchemy import SQLAlchemy
 import yfinance as yf
 import pandas as pd
 import websockets
-import os
 
+# ========== CONFIGURAÇÃO DO APP ==========
 app = Flask(__name__)
 CORS(app)
 
-# ========== CONFIGURAÇÃO ==========
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-mude-em-producao')
-
 # ========== CONFIGURAÇÃO DO BANCO DE DADOS ==========
-DB_USER = os.environ.get('DB_USER', 'root')
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'sua_senha')
-DB_HOST = os.environ.get('DB_HOST', 'localhost')
-DB_NAME = os.environ.get('DB_NAME', 'findash')
+# Lê a URL do banco de dados da variável de ambiente DATABASE_URL
+# Se não existir, usa SQLite local para desenvolvimento
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    # Fallback para desenvolvimento local com SQLite
+    database_url = 'sqlite:///findash.db'
+else:
+    # Ajusta a URL para o formato esperado pelo SQLAlchemy
+    # O Render fornece URLs no formato 'postgres://...'
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}?charset=utf8mb4'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = False
+app.config['SQLALCHEMY_ECHO'] = False  # Defina como True para ver logs SQL (desative em produção)
+
+# Chave secreta para JWT (use variável de ambiente em produção)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-mude-em-producao')
 
 db = SQLAlchemy(app)
 
-# ========== MODELO DE USUÁRIO ==========
+# ========== MODELO DE USUÁRIO (compatível com PostgreSQL) ==========
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -88,6 +96,7 @@ class User(db.Model):
         pattern = r'^[a-zA-Z0-9_]{3,30}$'
         return re.match(pattern, username) is not None
 
+# Cria as tabelas (se não existirem)
 with app.app_context():
     db.create_all()
     print("✅ Tabelas criadas/verificadas com sucesso!")
@@ -116,9 +125,9 @@ cache = {
     'crypto_prices': {},
     'last_update': {}
 }
-CACHE_TTL = 60
+CACHE_TTL = 60  # segundos
 
-# ========== FUNÇÕES AUXILIARES ==========
+# ========== FUNÇÕES AUXILIARES PARA YAHOO FINANCE ==========
 def get_yf_ticker(symbol):
     ticker = yf.Ticker(symbol)
     ticker.session.headers.update({
@@ -339,7 +348,7 @@ def get_current_user():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ========== ROTA DE ATUALIZAÇÃO DE PERFIL (NOVA) ==========
+# ========== ROTA DE ATUALIZAÇÃO DE PERFIL ==========
 @app.route('/api/update-profile', methods=['PUT'])
 def update_profile():
     auth_header = request.headers.get('Authorization')
@@ -497,9 +506,12 @@ async def main():
         await asyncio.Future()
 
 def run_flask():
+    # Em produção, o Gunicorn executa essa aplicação. Para desenvolvimento local, podemos rodar o Flask.
+    # Se esta for a execução principal, o Flask irá iniciar.
     app.run(debug=True, port=5000, use_reloader=False)
 
 if __name__ == '__main__':
+    # Em desenvolvimento local, rodamos o Flask e o WebSocket em threads separadas
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
