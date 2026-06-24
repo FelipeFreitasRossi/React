@@ -1,70 +1,279 @@
-# Getting Started with Create React App
+FinDash - Plataforma de Análise Financeira
+FinDash é uma aplicação web completa para monitoramento de investimentos, com dados em tempo real, gráficos interativos e autenticação segura. O projeto utiliza React no frontend e Flask no backend, com banco de dados PostgreSQL.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Índice
+Demonstração
 
-## Available Scripts
+Características
 
-In the project directory, you can run:
+Tecnologias Utilizadas
 
-### `npm start`
+Arquitetura
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Estrutura do Projeto
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Como Executar Localmente
 
-### `npm test`
+Deploy
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+API Endpoints
 
-### `npm run build`
+Contribuição
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Licença
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Demonstração
+Frontend (Vercel): https://react-kilc-5gs42so99-projetosfeitos.vercel.app
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Backend (Render): https://react-1-1y06.onrender.com/api/status
 
-### `npm run eject`
+Características
+Autenticação segura com JWT e bcrypt
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Cadastro e login com validação de email e senha
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Dashboard financeiro com gráficos de preços (AreaChart, SMA)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Dados em tempo real via WebSocket (cotações de ações e criptomoedas)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Lista de moedas com preços atualizados a cada 2 segundos
 
-## Learn More
+Perfil do usuário com edição de nome, foto e informações
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Configurações com tema claro/escuro e idioma (PT/EN)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Responsividade para dispositivos móveis
 
-### Code Splitting
+Segurança com tokens JWT e criptografia de senhas
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Tradução completa para português e inglês
 
-### Analyzing the Bundle Size
+Tecnologias Utilizadas
+Frontend
+React 18 com hooks e contexto
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+React Router DOM para navegação
 
-### Making a Progressive Web App
+Styled Components para estilização
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Recharts para gráficos interativos
 
-### Advanced Configuration
+React Icons para ícones vetoriais
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Socket.io-client para WebSocket
 
-### Deployment
+Fetch API para requisições HTTP
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Backend
+Flask 2.3.3 – framework web Python
 
-### `npm run build` fails to minify
+Flask-SQLAlchemy – ORM para banco de dados
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Flask-CORS – habilitar CORS
+
+PyJWT – geração e validação de tokens
+
+Bcrypt – hash de senhas
+
+yfinance – dados financeiros (ações e criptomoedas)
+
+WebSockets – comunicação em tempo real
+
+Gunicorn – servidor WSGI para produção
+
+Banco de Dados
+PostgreSQL (em produção via Render)
+
+SQLite (desenvolvimento local)
+
+Infraestrutura
+Vercel – hospedagem do frontend
+
+Render – hospedagem do backend e banco de dados
+
+Git – controle de versão
+
+Arquitetura
+
++------------------+     +------------------+     +------------------+
+|   Frontend       |     |   Backend        |     |   Database       |
+|   (React)        | <-> |   (Flask)        | <-> |   (PostgreSQL)   |
+|   Vercel         |     |   Render         |     |   Render         |
++------------------+     +------------------+     +------------------+
+        |                         |
+        |                         |
+        +------ WebSocket --------+
+O frontend faz requisições REST para o backend (login, cadastro, dados históricos, perfil).
+
+O WebSocket mantém uma conexão persistente para atualizações de preços em tempo real.
+
+O backend consulta a API do Yahoo Finance (via yfinance) e entrega os dados com cache.
+
+Estrutura do Projeto
+
+projeto/
+├── backend/
+│   ├── app.py                 # Aplicação Flask principal
+│   ├── requirements.txt       # Dependências Python
+│   └── .env.example           # Exemplo de variáveis de ambiente
+├── frontend/
+│   ├── public/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Loader.js
+│   │   │   ├── Header.js
+│   │   │   ├── Footer.js
+│   │   │   ├── Dashboard.js
+│   │   │   └── LoginForm.js
+│   │   ├── pages/
+│   │   │   ├── Home.js
+│   │   │   ├── About.js
+│   │   │   ├── Contact.js
+│   │   │   ├── Profile.js
+│   │   │   ├── Settings.js
+│   │   │   └── Crypto.js
+│   │   ├── contexts/
+│   │   │   └── ThemeContext.js
+│   │   ├── translations/
+│   │   │   └── index.js
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   └── index.css
+│   ├── package.json
+│   └── vercel.json            # Configuração do Vercel
+├── .gitignore
+└── README.md
+Como Executar Localmente
+Pré-requisitos
+Node.js 18+ e npm
+
+Python 3.11+ e pip
+
+PostgreSQL (opcional, SQLite funciona para desenvolvimento)
+
+1. Clonar o repositório
+bash
+git clone https://github.com/FelipeFreitasRossi/React.git
+cd React
+2. Configurar o Backend
+bash
+cd backend
+python -m venv venv
+source venv/bin/activate      # Linux/Mac
+venv\Scripts\activate         # Windows
+pip install -r requirements.txt
+Crie um arquivo .env na pasta backend (copie de .env.example):
+
+env
+DATABASE_URL=sqlite:///findash.db   # ou postgresql://...
+SECRET_KEY=sua-chave-secreta-aqui
+Execute o servidor:
+
+bash
+python app.py
+O backend estará em http://localhost:5000 e o WebSocket em ws://localhost:8765.
+
+3. Configurar o Frontend
+Em outro terminal:
+
+bash
+cd frontend
+npm install
+Crie um arquivo .env na pasta frontend:
+
+env
+REACT_APP_API_URL=http://localhost:5000
+Execute o servidor de desenvolvimento:
+
+bash
+npm start
+O frontend estará em http://localhost:3000.
+
+4. Acessar a aplicação
+Abra http://localhost:3000 no navegador. Faça cadastro e login para acessar o dashboard.
+
+Deploy
+Backend (Render)
+Crie uma conta no Render.
+
+Conecte o repositório GitHub.
+
+Crie um Web Service com as seguintes configurações:
+
+Build Command: pip install -r requirements.txt
+
+Start Command: gunicorn app:app
+
+Environment Variables:
+
+DATABASE_URL (PostgreSQL do Render)
+
+SECRET_KEY
+
+PYTHON_VERSION (opcional)
+
+Crie um banco de dados PostgreSQL no Render e obtenha a URL.
+
+O Render fará o deploy automaticamente a cada push.
+
+Frontend (Vercel)
+Crie uma conta no Vercel.
+
+Conecte o repositório GitHub.
+
+Configure:
+
+Build Command: npm run build
+
+Output Directory: build
+
+Environment Variables:
+
+REACT_APP_API_URL: URL do backend no Render
+
+DISABLE_ESLINT_PLUGIN: true (para ignorar warnings)
+
+O Vercel fará o deploy automaticamente a cada push.
+
+API Endpoints
+Autenticação
+Método	Endpoint	Descrição
+POST	/api/register	Cadastrar novo usuário
+POST	/api/login	Login e retorno de token JWT
+GET	/api/me	Validar token e obter dados do usuário
+Perfil e Segurança
+Método	Endpoint	Descrição
+PUT	/api/update-profile	Atualizar nome de usuário e nome completo
+POST	/api/change-password	Alterar senha
+DELETE	/api/delete-account	Excluir conta permanentemente
+Dados Financeiros
+Método	Endpoint	Descrição
+GET	/api/historical	Dados históricos de um ativo (AAPL, TSLA)
+GET	/api/company-info	Informações da empresa (nome, setor)
+GET	/api/crypto-prices	Preços de criptomoedas e moedas
+WebSocket
+Endpoint	Descrição
+ws://localhost:8765	Conexão WebSocket para preços em tempo real
+Contribuição
+Contribuições são bem-vindas! Siga os passos:
+
+Fork o projeto
+
+Crie uma branch para sua feature (git checkout -b feature/nova-feature)
+
+Commit suas mudanças (git commit -m 'Adiciona nova feature')
+
+Push para a branch (git push origin feature/nova-feature)
+
+Abra um Pull Request
+
+Licença
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+
+Contato
+Autor: Felipe de Freitas Rossi
+
+GitHub: FelipeFreitasRossi
+
+LinkedIn: Felipe de Freitas Rossi
